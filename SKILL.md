@@ -70,14 +70,22 @@ and guide.
    "improve" them from memory: the runbook is the **single source of truth**, and the
    command order matters (e.g. `gateway.bind loopback` + restart must come *before*
    `gateway.tailscale.mode serve`, or the gateway rejects it). If a step in the runbook
-   looks wrong, **say so** to the user instead of silently rewriting it. The **only** step the user must run alone
-   over SSH is the final loopback flip + `openclaw qr` (Phase 1's last command), because
-   *that* is what drops this chat. Everything up to it, you show inline.
+   looks wrong, **say so** to the user instead of silently rewriting it. The **one** step the user runs alone
+   over SSH is the pairing itself — the bundled **`./pair.sh`** script (in
+   `~/.openclaw/skills/openclaw-mobile-pairing/`), which flips to loopback, shows the QR,
+   and **always restores the `0.0.0.0` bind on exit** (even on error or Ctrl-C), so the
+   user cannot get stuck in the broken loopback state that takes the back-end down. Hand
+   them that single command; do **not** paste the raw loopback-flip commands unless
+   `pair.sh` is unavailable — then use the runbook's *Manual fallback* and make sure they
+   run Phase 2. Everything before pairing, you show inline.
 
-5. **After they finish**, they return to `gateway.customBindHost=0.0.0.0` with
-   `gateway.tailscale.mode` unset (Phase 2), so this chat comes back and the phone
-   keeps working through Tailscale Serve. If chat is down longer than ~20s, they may
-   have skipped Phase 2 — remind them to restore the `0.0.0.0` bind.
+5. **After `./pair.sh` exits**, the gateway is back on `0.0.0.0` with
+   `gateway.tailscale.mode` unset automatically (the script's exit trap), so this chat
+   returns and the phone keeps working through Tailscale Serve. If chat stays down
+   longer than ~30s, something left the gateway on loopback (e.g. the manual fallback
+   run without Phase 2) — tell the user to restore it (`gateway.bind custom` +
+   `customBindHost 0.0.0.0` + restart), or just run `./pair.sh` again, which restores
+   `0.0.0.0` on exit.
 
 ## Troubleshooting the user may report
 

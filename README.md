@@ -36,6 +36,7 @@ Prefer to do it by hand? You don't need to install anything — just open
 |---|---|---|
 | [`SKILL.md`](./SKILL.md) | the OpenClaw agent | Recognizes a "connect my phone" request, explains it, guides the safe parts over chat, and hands the pairing off to you. |
 | [`HUMAN-SETUP.md`](./HUMAN-SETUP.md) | a person | Full step-by-step runbook: SSH access, Tailscale onboarding, the pairing phases, verification, recovery. |
+| [`pair.sh`](./pair.sh) | a person (over SSH) | One-shot pairing: flips the gateway to loopback, shows the QR, and **always restores the `0.0.0.0` bind on exit** (even on error / Ctrl-C) so you can't get stuck in the broken loopback state. |
 
 ## The one important catch
 

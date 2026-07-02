@@ -146,32 +146,53 @@ tailscale serve status                             # confirm https://<magic-dns>
 `tailscale serve` is a **separate** thing from OpenClaw's `mode=serve` — the config
 flag never starts it. It survives reboots on its own.
 
-**Phase 1 — pair the phone (loopback + mode=serve, needed only to make the QR):**
+**Phase 1 + 2 — pair the phone (run the script — recommended):**
+
+Pairing needs the gateway on loopback for a moment, which takes the remote client
+down. `pair.sh` (bundled with this skill) does the flip, shows the QR, and — on
+success, on error, **or on Ctrl-C** — **always** restores the `0.0.0.0` bind. That
+guaranteed restore is what stops you from getting stuck in the broken loopback state
+(the #1 way this setup takes the back-end down).
 ```bash
-openclaw config set gateway.bind loopback          # set the loopback bind FIRST — mode=serve is rejected while bind is public
+cd ~/.openclaw/skills/openclaw-mobile-pairing   # folder that holds pair.sh (adjust if yours differs)
+chmod +x pair.sh                                 # first time only
+./pair.sh
+```
+Scan the QR with the app, then press Enter. The script restores `0.0.0.0`
+automatically — confirm with "Verify both paths" below.
+
+<details>
+<summary><strong>Manual fallback</strong> — only if the script isn't available</summary>
+
+Run these by hand. You **must** complete Phase 2 afterwards, or the remote client
+stays down — this is the single most common way to break the back-end.
+
+*Phase 1 — mint the code (loopback + mode=serve):*
+```bash
+openclaw config set gateway.bind loopback          # loopback bind FIRST — mode=serve is rejected while bind is public
 openclaw gateway restart                           # apply the loopback bind before touching mode
 openclaw config set gateway.tailscale.mode serve   # now this passes; would fail if bind were still public
 openclaw gateway restart
 curl -v https://<magic-dns>/                       # expect 200 (first call ~10–15s: cert issue)
-openclaw qr                                         # renders a scannable QR in the terminal — scan it with the app
-# openclaw qr --setup-code-only                     # fallback: prints the text code only (if the QR won't render / for manual entry)
+openclaw qr                                         # scannable QR (or: openclaw qr --setup-code-only for a text code)
 ```
 > **Order matters.** Set `gateway.bind loopback` and **restart** *before* setting
-> `gateway.tailscale.mode serve`. The validator checks the bind the moment you set
-> `mode`, so setting `mode` first (or setting `customBindHost` without a restart) fails
-> with `gateway.bind must resolve to loopback`. `bind=loopback` is more robust than
-> `customBindHost=127.0.0.1` — the latter is ignored unless `gateway.bind` is already
-> `custom`.
+> `gateway.tailscale.mode serve` — the validator checks the running bind the moment
+> you set `mode`, so setting `mode` first fails with `gateway.bind must resolve to
+> loopback`. `bind=loopback` is more robust than `customBindHost=127.0.0.1` (the
+> latter is ignored unless `gateway.bind` is already `custom`).
 
-**Phase 2 — restore the public bind so the remote client works again:**
+*Phase 2 — restore the public bind (DO NOT SKIP):*
 ```bash
 openclaw config unset gateway.tailscale.mode       # if unset is rejected: set gateway.tailscale.mode off
 openclaw config set gateway.bind custom            # undo the loopback bind from Phase 1
-openclaw config set gateway.customBindHost 0.0.0.0  # public bind that both the remote client and Tailscale Serve use
+openclaw config set gateway.customBindHost 0.0.0.0  # public bind used by both the remote client and Tailscale Serve
 openclaw gateway restart                           # the remote client's chat is down for these few seconds
 ```
-The phone stays paired and keeps working through Tailscale Serve — Phase 2 does not
-disconnect it.
+</details>
+
+The phone stays paired and keeps working through Tailscale Serve — restoring the
+`0.0.0.0` bind does not disconnect it.
 
 ## Verify both paths
 
@@ -195,22 +216,14 @@ checks above (both return 200). Ignore this line in this configuration.
 
 ## Re-pairing the app later
 
-`openclaw qr` refuses to run while bound to `0.0.0.0` (same "public bind" error as at
-first setup). To mint a new code without a long outage for the remote client, repeat
-Phase 1 then Phase 2:
+Need a fresh code later (new phone, expired code)? Just run the script again — it
+re-flips to loopback, shows a new QR, and restores `0.0.0.0`:
 ```bash
-openclaw config set gateway.bind loopback     # loopback bind FIRST (see Phase 1 order note)
-openclaw gateway restart                       # the remote client's chat fails during this window
-openclaw config set gateway.tailscale.mode serve
-openclaw gateway restart
-openclaw qr                                    # scannable QR (add --setup-code-only for the text code)
-openclaw config unset gateway.tailscale.mode
-openclaw config set gateway.bind custom
-openclaw config set gateway.customBindHost 0.0.0.0
-openclaw gateway restart
+cd ~/.openclaw/skills/openclaw-mobile-pairing && ./pair.sh
 ```
-Remote-client downtime: a few seconds per restart (~10–20s total). Do it in a
-low-traffic window if it matters.
+(By hand: repeat the manual Phase 1 + Phase 2 from "First-time setup". Remote-client
+downtime is a few seconds per restart, ~10–20s total — do it in a low-traffic window
+if it matters.)
 
 ## If the phone can't use Tailscale / you'd rather not
 
@@ -291,7 +304,7 @@ happens often, snapshot a golden image or automate the setup.
 | Serve status | `tailscale serve status` |
 | Tailnet status | `tailscale status` |
 | Gateway logs | `/tmp/openclaw/openclaw-YYYY-MM-DD.log` |
-| Fresh setup code | requires a temporary flip to loopback — see "Re-pairing later" |
+| Pair / re-pair the phone | `./pair.sh` (flips to loopback, shows QR, auto-restores `0.0.0.0`) |
 
 ## Gotchas that cost real time
 
