@@ -42,16 +42,20 @@ telling the user the next concrete action. Roadmap:
 2. **Get SSH access first — this is the first concrete step, so raise it immediately.**
    Every step below runs in a shell *on this VM*, so the user needs SSH before anything
    else:
-   - Ask if they can already `ssh` in. They need this host's **public IP**, the login
-     user (commonly `ubuntu`), and their SSH key installed on the VM.
+   - Ask if they can already `ssh` in. They need this host's **public IP** and their
+     SSH key installed on the VM. The login user for this VM is **`ubuntu`** — do
+     **not** guess it from the user's local username or the comment in their public key
+     (e.g. `anton@MAC-…` is just their laptop, not the VM account).
    - If they cannot, offer to register their key: ask them to paste their **public**
      key (`ssh-ed25519 …` / `ssh-rsa …` from `~/.ssh/id_*.pub` — **never** a private
      key), append it to `~/.ssh/authorized_keys` on this host, and give them the
-     command `ssh <user>@<public-ip>`. You can read the public IP here for them.
+     command `ssh ubuntu@<public-ip>`. You can read the public IP here for them.
 
 3. **Once they are on the VM, have them update OpenClaw first.** Older builds miss
    features this flow needs (`openclaw skills install git:...`, the `--global` flag) and
-   have older gateway behavior. Have them run:
+   have older gateway behavior. Have them run **exactly** this — the command is
+   `openclaw update`, **not** `openclaw self-update`, `openclaw upgrade`, or any other
+   variant (those do not exist and error with `unknown command`):
    ```
    openclaw update
    ```
