@@ -50,6 +50,18 @@ restore_public_bind() {  # ALWAYS runs on exit — puts the gateway back on 0.0.
   esac
 }
 
+# ---- keep OpenClaw current (older builds miss git: install / --global and some gateway
+#      behavior). Runs `openclaw update` unless PAIR_SKIP_UPDATE=1. Non-fatal; note that
+#      `openclaw update` restarts the gateway, which is fine here (pairing restarts it too).
+if [ "${PAIR_SKIP_UPDATE:-0}" != "1" ]; then
+  echo ">> Ensuring OpenClaw is up to date (set PAIR_SKIP_UPDATE=1 to skip)..."
+  if "$OC" update >/dev/null 2>&1; then
+    echo ">> OpenClaw is current."
+  else
+    echo ">> (openclaw update skipped or failed — continuing anyway)"
+  fi
+fi
+
 # ---- pre-checks (before arming the trap, so an early exit causes no needless restart) ----
 command -v tailscale >/dev/null 2>&1 \
   || { echo "ERROR: tailscale is not installed. Do Phase 0 first (see HUMAN-SETUP.md)."; exit 1; }

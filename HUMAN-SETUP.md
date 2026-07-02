@@ -102,6 +102,18 @@ before anything else:
 
 Run everything below inside that SSH session.
 
+## Update OpenClaw first (once you're on the VM)
+
+Older OpenClaw builds miss features this flow relies on — `openclaw skills install
+git:...`, the `--global` flag, and some current gateway behavior. As soon as you are
+SSHed in, update to the latest version:
+```bash
+openclaw update              # auto-detects install type, migrates config, restarts the gateway
+# openclaw update --dry-run  # optional: preview the actions first
+```
+This briefly restarts the gateway. Do it **before** the Tailscale and pairing steps
+below. (`pair.sh` also runs this for you unless you set `PAIR_SKIP_UPDATE=1`.)
+
 ## New to Tailscale? Set this up first
 
 **What it is.** Tailscale is a private, encrypted network — a "mesh VPN" built on

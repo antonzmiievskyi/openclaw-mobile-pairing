@@ -27,12 +27,39 @@ and guide.
 
 ## What to do instead
 
+**Drive this proactively.** The moment the user wants to pair — or has just installed
+this skill — take the lead. Do **not** go quiet after install or after each step: state
+the short roadmap, then immediately start executing it, and always end your turn by
+telling the user the next concrete action. Roadmap:
+
+> **1) SSH access → 2) update OpenClaw → 3) set up Tailscale → 4) run `pair.sh`.**
+
 1. **Explain in one plain sentence, no jargon:** "Connecting the phone app needs a
    private, secure network (Tailscale) between your phone and this machine, plus a
-   one-time setup code you enter on the phone."
+   one-time setup code you enter on the phone. We'll do it over SSH in a few short
+   steps — I'll walk you through each one."
 
-2. **Help with the parts that do NOT touch the gateway bind** — these are safe over
-   chat, so do as much as the user wants:
+2. **Get SSH access first — this is the first concrete step, so raise it immediately.**
+   Every step below runs in a shell *on this VM*, so the user needs SSH before anything
+   else:
+   - Ask if they can already `ssh` in. They need this host's **public IP**, the login
+     user (commonly `ubuntu`), and their SSH key installed on the VM.
+   - If they cannot, offer to register their key: ask them to paste their **public**
+     key (`ssh-ed25519 …` / `ssh-rsa …` from `~/.ssh/id_*.pub` — **never** a private
+     key), append it to `~/.ssh/authorized_keys` on this host, and give them the
+     command `ssh <user>@<public-ip>`. You can read the public IP here for them.
+
+3. **Once they are on the VM, have them update OpenClaw first.** Older builds miss
+   features this flow needs (`openclaw skills install git:...`, the `--global` flag) and
+   have older gateway behavior. Have them run:
+   ```
+   openclaw update
+   ```
+   It migrates config and **restarts the gateway** (a brief blip on this chat). Do this
+   before the Tailscale and pairing steps.
+
+4. **Help with the Tailscale setup** — these parts do NOT touch the gateway bind, so
+   they are safe over chat; do as much as the user wants:
    - **First ask: "Have you used Tailscale before?"** If not, do NOT dump commands on
      them. Relay the `HUMAN-SETUP.md` section **"New to Tailscale? Set this up first"**
      inline: say in one plain sentence that Tailscale is a **free** private, encrypted
@@ -49,16 +76,7 @@ and guide.
      http://127.0.0.1:18789`. Confirm with `tailscale status` / `tailscale serve
      status`.
 
-3. **Make sure the user can open a terminal on this machine (SSH).** Every pairing
-   step runs in a shell *here*, so the user needs SSH access first:
-   - Ask if they can already `ssh` in. They need this host's **public IP**, the login
-     user (commonly `ubuntu`), and their SSH key installed on the VM.
-   - If they cannot, offer to register their key: ask them to paste their **public**
-     key (`ssh-ed25519 …` / `ssh-rsa …` from `~/.ssh/id_*.pub` — **never** a private
-     key), append it to `~/.ssh/authorized_keys` on this host, and give them the
-     command `ssh <user>@<public-ip>`. You can read the public IP here for them.
-
-4. **Read the runbook yourself and present the steps inline — do not offload the
+5. **Read the runbook yourself and present the steps inline — do not offload the
    reading onto the user.** Reading `HUMAN-SETUP.md` is a plain file read; it touches
    nothing and drops no connection. So **read it** (on this VM:
    `~/.openclaw/skills/openclaw-mobile-pairing/HUMAN-SETUP.md`) and paste its Phase 1 /
@@ -79,7 +97,7 @@ and guide.
    `pair.sh` is unavailable — then use the runbook's *Manual fallback* and make sure they
    run Phase 2. Everything before pairing, you show inline.
 
-5. **After `./pair.sh` exits**, the gateway is back on `0.0.0.0` with
+6. **After `./pair.sh` exits**, the gateway is back on `0.0.0.0` with
    `gateway.tailscale.mode` unset automatically (the script's exit trap), so this chat
    returns and the phone keeps working through Tailscale Serve. If chat stays down
    longer than ~30s, something left the gateway on loopback (e.g. the manual fallback
