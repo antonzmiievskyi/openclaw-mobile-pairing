@@ -62,8 +62,12 @@ telling the user the next concrete action. Roadmap:
    It migrates config and **restarts the gateway** (a brief blip on this chat). Do this
    before the Tailscale and pairing steps.
 
-4. **Help with the Tailscale setup** — these parts do NOT touch the gateway bind, so
-   they are safe over chat; do as much as the user wants:
+4. **Guide the Tailscale setup — but have the user run the commands in their own SSH
+   session.** These steps do NOT touch the gateway bind (they never drop this chat), so
+   it is safe to present them; **still do not run them from your side.** `sudo tailscale
+   up` is **interactive** — it prints a login URL and **blocks** until the user approves
+   the node in a browser — and an agent shell handles that badly (it hangs). So show the
+   commands inline and let the user execute them over SSH:
    - **First ask: "Have you used Tailscale before?"** If not, do NOT dump commands on
      them. Relay the `HUMAN-SETUP.md` section **"New to Tailscale? Set this up first"**
      inline: say in one plain sentence that Tailscale is a **free** private, encrypted
@@ -75,10 +79,18 @@ telling the user the next concrete action. Roadmap:
    - Then guide them to enable HTTPS (admin console → **DNS → Enable HTTPS**).
    - Have them install the **Tailscale** app on the phone and sign in with the
      **same** account.
-   - You may run `sudo tailscale up` on this host and relay the printed login URL
-     for them to approve in a browser, then `sudo tailscale serve --bg
-     http://127.0.0.1:18789`. Confirm with `tailscale status` / `tailscale serve
-     status`.
+   - **For installing + starting Tailscale on the VM, read `HUMAN-SETUP.md` "Phase 0 —
+     Tailscale + Serve" and paste those commands inline, verbatim and in order**, each
+     with a one-line plain explanation, for the user to run in their SSH session — do
+     **not** run them yourself:
+     - `curl -fsSL https://tailscale.com/install.sh | sh` — installs Tailscale on the VM.
+     - `sudo tailscale up` — prints a login URL; have the user open it in a browser and
+       approve the node (this is the interactive step that hangs an agent shell).
+     - `sudo tailscale serve --bg http://127.0.0.1:18789` — puts the TLS front on :443.
+     - `tailscale serve status` — confirm `https://<magic-dns> → http://127.0.0.1:18789`.
+     You may still **read** `tailscale status` / `tailscale serve status` yourself to
+     check progress (read-only, non-interactive), but the `up` / `serve` / install
+     commands are the user's to run.
 
 5. **Read the runbook yourself and present the steps inline — do not offload the
    reading onto the user.** Reading `HUMAN-SETUP.md` is a plain file read; it touches
