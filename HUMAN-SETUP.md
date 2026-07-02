@@ -148,17 +148,26 @@ flag never starts it. It survives reboots on its own.
 
 **Phase 1 — pair the phone (loopback + mode=serve, needed only to make the QR):**
 ```bash
-openclaw config set gateway.tailscale.mode serve
-openclaw config set gateway.customBindHost 127.0.0.1
+openclaw config set gateway.bind loopback          # set the loopback bind FIRST — mode=serve is rejected while bind is public
+openclaw gateway restart                           # apply the loopback bind before touching mode
+openclaw config set gateway.tailscale.mode serve   # now this passes; would fail if bind were still public
 openclaw gateway restart
 curl -v https://<magic-dns>/                       # expect 200 (first call ~10–15s: cert issue)
-openclaw qr --setup-code-only                      # paste into the app; token is single-use, pair now
+openclaw qr                                         # renders a scannable QR in the terminal — scan it with the app
+# openclaw qr --setup-code-only                     # fallback: prints the text code only (if the QR won't render / for manual entry)
 ```
+> **Order matters.** Set `gateway.bind loopback` and **restart** *before* setting
+> `gateway.tailscale.mode serve`. The validator checks the bind the moment you set
+> `mode`, so setting `mode` first (or setting `customBindHost` without a restart) fails
+> with `gateway.bind must resolve to loopback`. `bind=loopback` is more robust than
+> `customBindHost=127.0.0.1` — the latter is ignored unless `gateway.bind` is already
+> `custom`.
 
 **Phase 2 — restore the public bind so the remote client works again:**
 ```bash
 openclaw config unset gateway.tailscale.mode       # if unset is rejected: set gateway.tailscale.mode off
-openclaw config set gateway.customBindHost 0.0.0.0
+openclaw config set gateway.bind custom            # undo the loopback bind from Phase 1
+openclaw config set gateway.customBindHost 0.0.0.0  # public bind that both the remote client and Tailscale Serve use
 openclaw gateway restart                           # the remote client's chat is down for these few seconds
 ```
 The phone stays paired and keeps working through Tailscale Serve — Phase 2 does not
@@ -190,11 +199,13 @@ checks above (both return 200). Ignore this line in this configuration.
 first setup). To mint a new code without a long outage for the remote client, repeat
 Phase 1 then Phase 2:
 ```bash
+openclaw config set gateway.bind loopback     # loopback bind FIRST (see Phase 1 order note)
+openclaw gateway restart                       # the remote client's chat fails during this window
 openclaw config set gateway.tailscale.mode serve
-openclaw config set gateway.customBindHost 127.0.0.1
-openclaw gateway restart          # the remote client's chat fails during this window
-openclaw qr --setup-code-only     # copy code, pair the phone
+openclaw gateway restart
+openclaw qr                                    # scannable QR (add --setup-code-only for the text code)
 openclaw config unset gateway.tailscale.mode
+openclaw config set gateway.bind custom
 openclaw config set gateway.customBindHost 0.0.0.0
 openclaw gateway restart
 ```
@@ -245,6 +256,7 @@ nc -z -w5 <public-ip> 18789     # or: curl -m8 -o /dev/null -w '%{http_code}\n' 
    bind got reset:
    ```bash
    openclaw config unset gateway.tailscale.mode
+   openclaw config set gateway.bind custom
    openclaw config set gateway.customBindHost 0.0.0.0
    openclaw gateway restart
    ```
