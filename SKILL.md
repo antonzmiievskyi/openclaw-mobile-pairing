@@ -33,9 +33,15 @@ and guide.
 
 2. **Help with the parts that do NOT touch the gateway bind** — these are safe over
    chat, so do as much as the user wants:
-   - Explain what Tailscale is; guide them to sign up at
-     `https://login.tailscale.com` and to enable HTTPS (admin console → **DNS →
-     Enable HTTPS**).
+   - **First ask: "Have you used Tailscale before?"** If not, do NOT dump commands on
+     them. Relay the `HUMAN-SETUP.md` section **"New to Tailscale? Set this up first"**
+     inline: say in one plain sentence that Tailscale is a **free** private, encrypted
+     network (a "mesh VPN") between the phone and this VM, that it is a **separate
+     third-party service** they must sign up for, and that a personal account is free.
+     Give them `https://login.tailscale.com` and the sign-in options (Google /
+     Microsoft / GitHub). Do NOT give any `tailscale ...` command until they have an
+     account and both nodes (VM + phone) show online.
+   - Then guide them to enable HTTPS (admin console → **DNS → Enable HTTPS**).
    - Have them install the **Tailscale** app on the phone and sign in with the
      **same** account.
    - You may run `sudo tailscale up` on this host and relay the printed login URL
