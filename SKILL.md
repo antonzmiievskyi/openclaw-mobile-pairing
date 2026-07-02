@@ -52,12 +52,16 @@ and guide.
      key), append it to `~/.ssh/authorized_keys` on this host, and give them the
      command `ssh <user>@<public-ip>`. You can read the public IP here for them.
 
-4. **Hand off the pairing itself.** The final step — flipping to loopback and running
-   `openclaw qr` — must be done by the user over SSH, because it drops this chat.
-   Point them to the full guide, `HUMAN-SETUP.md`, in this skill's folder (on this VM:
-   `~/.openclaw/skills/openclaw-mobile-pairing/HUMAN-SETUP.md`). You may also read that
-   file and relay its Phase 1 / Phase 2 commands so they can paste them in their SSH
-   session.
+4. **Read the runbook yourself and present the steps inline — do not offload the
+   reading onto the user.** Reading `HUMAN-SETUP.md` is a plain file read; it touches
+   nothing and drops no connection. So **read it** (on this VM:
+   `~/.openclaw/skills/openclaw-mobile-pairing/HUMAN-SETUP.md`) and paste its Phase 1 /
+   Phase 2 commands **directly into the chat**, in order, each with a one-line plain
+   explanation, so the user can copy them straight into their SSH session. **Do NOT**
+   just point them at the file or tell them to `less`/open it themselves — that is bad
+   UX, and nothing about reading it is unsafe. The **only** step the user must run alone
+   over SSH is the final loopback flip + `openclaw qr` (Phase 1's last command), because
+   *that* is what drops this chat. Everything up to it, you show inline.
 
 5. **After they finish**, they return to `gateway.customBindHost=0.0.0.0` with
    `gateway.tailscale.mode` unset (Phase 2), so this chat comes back and the phone
