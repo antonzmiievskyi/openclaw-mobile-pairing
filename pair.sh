@@ -135,6 +135,11 @@ fi
 
 # ---- [4/4] show the QR ----
 echo
+echo ">> BEFORE YOU SCAN — check on your PHONE (both are needed, or the app shows"
+echo ">> 'TLS handshake failed'):"
+echo ">>   1) Tailscale is ON / connected — same account as this VM."
+echo ">>   2) HTTPS is enabled for your tailnet (admin console: DNS -> Enable HTTPS)."
+echo
 echo "=====================  [4/4] SCAN THIS  ====================="
 "$OC" qr                          # scannable QR; run `openclaw qr --setup-code-only` for a paste-able text code
 echo "============================================================="

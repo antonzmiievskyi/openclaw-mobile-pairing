@@ -173,6 +173,13 @@ chmod +x pair.sh                                 # first time only
 Scan the QR with the app, then press Enter. The script restores `0.0.0.0`
 automatically — confirm with "Verify both paths" below.
 
+> **Before you scan, check your phone** (the #1 cause of "TLS handshake failed"):
+> **Tailscale must be ON / connected** on the phone (same account as the VM), and
+> **HTTPS must be enabled for the tailnet** (admin console → DNS → Enable HTTPS). The
+> gateway URL is a tailnet-only `wss://<magic-dns>` name — with Tailscale off, or HTTPS
+> not enabled, the phone can't complete the TLS handshake. `pair.sh` prints this same
+> reminder right before the QR.
+
 <details>
 <summary><strong>Manual fallback</strong> — only if the script isn't available</summary>
 
