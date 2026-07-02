@@ -65,7 +65,12 @@ and guide.
    Phase 2 commands **directly into the chat**, in order, each with a one-line plain
    explanation, so the user can copy them straight into their SSH session. **Do NOT**
    just point them at the file or tell them to `less`/open it themselves — that is bad
-   UX, and nothing about reading it is unsafe. The **only** step the user must run alone
+   UX, and nothing about reading it is unsafe. Copy the commands **verbatim** — same
+   text, same order as `HUMAN-SETUP.md`. Do NOT invent, reorder, paraphrase, or
+   "improve" them from memory: the runbook is the **single source of truth**, and the
+   command order matters (e.g. `gateway.bind loopback` + restart must come *before*
+   `gateway.tailscale.mode serve`, or the gateway rejects it). If a step in the runbook
+   looks wrong, **say so** to the user instead of silently rewriting it. The **only** step the user must run alone
    over SSH is the final loopback flip + `openclaw qr` (Phase 1's last command), because
    *that* is what drops this chat. Everything up to it, you show inline.
 
